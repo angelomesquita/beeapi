@@ -1,6 +1,9 @@
 package net.atos.beerapi.controller;
 
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.info.Contact;
+import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -14,6 +17,14 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/beers")
 @Tag(name= "Beer API", description = "API para gerenciamento das cervejas que eu gosto!!!")
+@OpenAPIDefinition(
+    info = @Info(
+        title = "Documentação da API de cervejas",
+        description = "API utilizada em treinamento do Swagger",
+        version = "1.0.0",
+        contact = @Contact(name = "Angelo Mesquita", url = "localhost:8080", email = "angeloamesquita@gmail.com")
+    )
+)
 public class BeerController {
 
     private final BeerService beerService;
@@ -35,7 +46,11 @@ public class BeerController {
         return beerService.getAllBeers();
     }
 
-    @GetMapping("/{id}")
+    @GetMapping(value = "/{id}", produces = "application/json")
+    @Operation(
+        summary = "Busca 1 registro de cerveja",
+        description = "Busca 1 registro de cerveja pelo seu ID informado na URI"
+    )
     public Beer getBeerById(@PathVariable Long id) {
         return beerService.getBeerById(id);
     }
