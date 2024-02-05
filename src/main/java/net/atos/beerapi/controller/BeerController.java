@@ -1,5 +1,6 @@
 package net.atos.beerapi.controller;
 
+import io.jsonwebtoken.Claims;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.info.Contact;
@@ -8,8 +9,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import net.atos.beerapi.model.Beer;
+import net.atos.beerapi.provider.JwtTokenProvider;
 import net.atos.beerapi.service.BeerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,10 +33,12 @@ import java.util.List;
 public class BeerController {
 
     private final BeerService beerService;
+    private final JwtTokenProvider tokenProvider;
 
     @Autowired
-    public BeerController(BeerService beerService) {
+    public BeerController(BeerService beerService, JwtTokenProvider tokenProvider) {
         this.beerService = beerService;
+        this.tokenProvider = tokenProvider;
     }
 
     @GetMapping(produces = "application/json")
@@ -42,8 +49,19 @@ public class BeerController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "operação com sucesso | []")
     })
-    public List<Beer> getAllBeer() {
-        return beerService.getAllBeers();
+    public ResponseEntity<List<Beer>> getAllBeer(@RequestHeader("Authorization") String token) {
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String jwtToken = token.substring(7);
+        Claims claims = tokenProvider.validateToken(jwtToken);
+        if (claims == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        List<Beer> beers = beerService.getAllBeers();
+        return ResponseEntity.ok(beers);
     }
 
     @GetMapping(value = "/{id}", produces = "application/json")
